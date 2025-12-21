@@ -81,6 +81,7 @@ static void grab_keys(void) {
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_space), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_F1), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Tab), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy, XKeysymToKeycode(dpy, XK_m), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
     }
     
     XGrabButton(dpy, 1, Mod4Mask, root, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
@@ -138,6 +139,14 @@ int main(void) {
                 return 0;
             } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_Tab) && (ev.xkey.state & Mod4Mask)) {
                 focus_next();
+            } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_m) && (ev.xkey.state & Mod4Mask)) {
+                Window focused;
+                int revert;
+                XGetInputFocus(dpy, &focused, &revert);
+                if (focused != root && focused != PointerRoot) {
+                    XMoveResizeWindow(dpy, focused, 0, 0,
+                        DisplayWidth(dpy, screen), DisplayHeight(dpy, screen));
+                }
             }
             break;
             
