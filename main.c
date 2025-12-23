@@ -1,8 +1,19 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+
+static const char *ct[]  = {"st", NULL};
+static const char *cw[]  = {"mychromium", NULL};
+static const char *cs[]  = {"dmenu_run", NULL};
+static const char *cy[] = {"amixer", "-q", "set", "Master", "toggle", NULL};
+static const char *cu[] = {"amixer", "-q", "set", "Master", "5%-", "unmute", NULL};
+static const char *ci[] = {"amixer", "-q", "set", "Master", "5%+", "unmute", NULL};
+static const char *co[] = {"bri", "-", NULL};
+static const char *cp[] = {"bri", "+", NULL};
 
 #define stk(s)      XKeysymToKeycode(dpy, XStringToKeysym(s))
 #define keys(k, _)  XGrabKey(dpy, stk(k), Mod4Mask, root, True, GrabModeAsync, GrabModeAsync);
@@ -11,14 +22,14 @@
   x("Tab", focus_next()) \
   x("q", kill_window()) \
   x("m", maximize_window()) \
-  x("t", start("st")) \
-  x("w", start("mychromium")) \
-  x("space", start("dmenu_run")) \
-  x("y", start("amixer -q set Master toggle")) \
-  x("u", start("amixer -q set Master 5%%- unmute")) \
-  x("i", start("amixer -q set Master 5%%+ unmute")) \
-  x("o", start("bri -")) \
-  x("p", start("bri +"))
+  x("t", start(ct)) \
+  x("w", start(cw)) \
+  x("space", start(cs)) \
+  x("y", start(cy)) \
+  x("u", start(cu)) \
+  x("i", start(ci)) \
+  x("o", start(co)) \
+  x("p", start(cp))
 
 static Display *dpy;
 static Window root;
@@ -32,11 +43,12 @@ static unsigned int win_start_w, win_start_h;
 static Window drag_win = None;
 static int resizing = 0;
 
-static void start(char *name) {
+static void start(const char **cmd) {
   if (fork() == 0) {
     if (dpy) close(ConnectionNumber(dpy));
     setsid();
-    system(name);
+    execvp(cmd[0], (char **)cmd);
+    _exit(0);
   }
 }
 
