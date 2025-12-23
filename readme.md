@@ -1,6 +1,6 @@
 # kwm
 
-a minimalistic X11 window manager.
+a minimalistic x11 window manager.
 
 - hover to focus
 - click to raise
@@ -10,5 +10,6 @@ a minimalistic X11 window manager.
 - super+q to quit
 - super+m to maximise a window
 - super+t to launch terminal
+- super+w to launch browser
 - super+space to launch dmenu
 - super+f1 to kill the wm

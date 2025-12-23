@@ -1,8 +1,8 @@
+#include <stdlib.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 static Display *dpy;
 static Window root;
@@ -10,7 +10,6 @@ static int screen;
 static Window *clients = NULL;
 static int nclients = 0;
 static int current = -1;
-
 static int drag_start_x, drag_start_y;
 static int win_start_x, win_start_y;
 static unsigned int win_start_w, win_start_h;
@@ -78,6 +77,7 @@ static void grab_keys(void) {
     for (int i = 0; i < 2; i++) {
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_q), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_t), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy, XKeysymToKeycode(dpy, XK_w), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_space), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_F1), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Tab), Mod4Mask | mods[i], root, True, GrabModeAsync, GrabModeAsync);
@@ -93,12 +93,9 @@ static void grab_keys(void) {
 int main(void) {
     XEvent ev;
     XWindowAttributes attr;
-    
     if (!(dpy = XOpenDisplay(NULL))) return 1;
-    
     screen = DefaultScreen(dpy);
     root = RootWindow(dpy, screen);
-    
     XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
     XDefineCursor(dpy, root, XCreateFontCursor(dpy, XC_left_ptr));
     grab_keys();
@@ -106,22 +103,18 @@ int main(void) {
     
     while (1) {
         XNextEvent(dpy, &ev);
-        
         switch (ev.type) {
         case MapRequest:
             XMapWindow(dpy, ev.xmaprequest.window);
             add_client(ev.xmaprequest.window);
             XSetInputFocus(dpy, ev.xmaprequest.window, RevertToPointerRoot, CurrentTime);
             break;
-            
         case DestroyNotify:
             remove_client(ev.xdestroywindow.window);
             break;
-            
         case UnmapNotify:
             remove_client(ev.xunmap.window);
             break;
-            
         case KeyPress:
             if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_q) && (ev.xkey.state & Mod4Mask)) {
                 Window focused;
@@ -131,6 +124,8 @@ int main(void) {
                     XKillClient(dpy, focused);
             } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_t) && (ev.xkey.state & Mod4Mask)) {
               start("st");
+            } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_w) && (ev.xkey.state & Mod4Mask)) {
+              start("mychromium");
             } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_space) && (ev.xkey.state & Mod4Mask)) {
               start("dmenu_run");
             } else if (ev.xkey.keycode == XKeysymToKeycode(dpy, XK_F1) && (ev.xkey.state & Mod4Mask)) {
@@ -149,7 +144,6 @@ int main(void) {
                 }
             }
             break;
-            
         case ButtonPress:
             if (ev.xbutton.subwindow != None) {
                 XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
@@ -168,7 +162,6 @@ int main(void) {
                 XAllowEvents(dpy, ReplayPointer, CurrentTime);
             }
             break;
-            
         case MotionNotify:
             if (drag_win != None) {
                 int xdiff = ev.xmotion.x_root - drag_start_x;
@@ -183,11 +176,9 @@ int main(void) {
                 }
             }
             break;
-            
         case ButtonRelease:
             drag_win = None;
             break;
-            
         case EnterNotify:
             if (ev.xcrossing.window != root) {
                 XSetInputFocus(dpy, ev.xcrossing.window, RevertToPointerRoot, CurrentTime);
@@ -195,6 +186,5 @@ int main(void) {
             break;
         }
     }
-    
     return 0;
 }
