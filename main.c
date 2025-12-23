@@ -8,7 +8,7 @@
 #define keys(k, _)  XGrabKey(dpy, stk(k), Mod4Mask, root, True, GrabModeAsync, GrabModeAsync);
 #define map(k, x)   if (ev.xkey.keycode == stk(k)) { x; }
 #define TBL(x)  x("F1", XCloseDisplay(dpy);free(clients);exit(0)) \
-  x("tab", focus_next()) \
+  x("Tab", focus_next()) \
   x("q", kill_window()) \
   x("m", maximize_window()) \
   x("t", start("st")) \
@@ -34,6 +34,7 @@ static int resizing = 0;
 
 static void start(char *name) {
   if (fork() == 0) {
+    if (dpy) close(ConnectionNumber(dpy));
     setsid();
     system(name);
   }
