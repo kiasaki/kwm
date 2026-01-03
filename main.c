@@ -5,6 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+#include <X11/extensions/Xinerama.h>
 
 static const char *ct[]  = {"st", NULL};
 static const char *cw[]  = {"mychromium", NULL};
@@ -79,8 +80,26 @@ static void maximize_window() {
   int revert;
   XGetInputFocus(dpy, &focused, &revert);
   if (focused != root && focused != PointerRoot) {
-    XMoveResizeWindow(dpy, focused, 0, 0,
-      DisplayWidth(dpy, screen), DisplayHeight(dpy, screen));
+    int mx = 0, my = 0, mw = DisplayWidth(dpy, screen), mh = DisplayHeight(dpy, screen);
+    int nmonitors;
+    XineramaScreenInfo *monitors = XineramaQueryScreens(dpy, &nmonitors);
+    if (monitors) {
+      Window child;
+      int wx, wy;
+      XTranslateCoordinates(dpy, focused, root, 0, 0, &wx, &wy, &child);
+      for (int i = 0; i < nmonitors; i++) {
+        if (wx >= monitors[i].x_org && wx < monitors[i].x_org + monitors[i].width &&
+            wy >= monitors[i].y_org && wy < monitors[i].y_org + monitors[i].height) {
+          mx = monitors[i].x_org;
+          my = monitors[i].y_org;
+          mw = monitors[i].width;
+          mh = monitors[i].height;
+          break;
+        }
+      }
+      XFree(monitors);
+    }
+    XMoveResizeWindow(dpy, focused, mx, my, mw, mh);
   }
 }
 
@@ -105,7 +124,7 @@ int main() {
   if (!(dpy = XOpenDisplay(NULL))) return 1;
   screen = DefaultScreen(dpy);
   root = RootWindow(dpy, screen);
-  XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
+  XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask | StructureNotifyMask);
   XDefineCursor(dpy, root, XCreateFontCursor(dpy, XC_left_ptr));
   // grab events
   TBL(keys);
